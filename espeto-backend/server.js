@@ -7,13 +7,24 @@ const estoqueRoutes = require('./routes/estoque.routes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*'
+}));
 app.use(express.json());
 
-// ── Rotas ──────────────────────────────────────────
+// Rotas
 app.use('/mesas',    mesaRoutes);
 app.use('/produtos', produtoRoutes);
 app.use('/estoque',  estoqueRoutes);
 
-// ── Inicia o servidor ──────────────────────────────
-app.listen(3000, () => console.log('✅ API rodando em http://localhost:3000'));
+// Health check (boa prática pra deploy)
+app.get('/', (req, res) => {
+  res.send('API Espeto rodando 🚀');
+});
+
+// Porta dinâmica (OBRIGATÓRIO)
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`✅ API rodando na porta ${PORT}`);
+});
