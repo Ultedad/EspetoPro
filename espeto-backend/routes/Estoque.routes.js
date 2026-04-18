@@ -2,7 +2,6 @@ const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 
 const router = Router();
-
 const prisma = new PrismaClient();
 
 // GET /estoque/alerta — produtos com estoque baixo ou zerado
