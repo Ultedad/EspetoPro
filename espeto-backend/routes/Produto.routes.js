@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
 
 const router = Router();
+
 const prisma = new PrismaClient();
 
 // GET /produtos
