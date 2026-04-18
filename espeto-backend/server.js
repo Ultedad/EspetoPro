@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 
-const mesaRoutes    = require('./routes/mesa.routes');
-const produtoRoutes = require('./routes/produto.routes');
-const estoqueRoutes = require('./routes/estoque.routes');
+const mesaRoutes    = require('./routes/Mesa.routes');
+const produtoRoutes = require('./routes/Produto.routes');
+const estoqueRoutes = require('./routes/Estoque.routes');
 
 const app = express();
 
