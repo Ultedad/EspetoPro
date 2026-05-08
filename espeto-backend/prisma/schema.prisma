@@ -4,41 +4,87 @@ generator client {
 
 datasource db {
   provider = "postgresql" //
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_TEST")
+}
+
+model AberturaCaixa {
+  id             Int      @id @default(autoincrement())
+  data           DateTime @default(now())
+  horario        String
+  responsavel    String
+  valorInicial   Float
+  estoqueInicial Json // snapshot do estoque
+  createdAt      DateTime @default(now())
+
+  fechamento FechamentoCaixa?
+}
+
+model VendaAvulsa {
+  id       Int              @id @default(autoincrement())
+  dataHora DateTime         @default(now())
+  itens    ItemVendaAvulsa[]
+}
+
+model ItemVendaAvulsa {
+  id             Int         @id @default(autoincrement())
+  vendaAvulsaId  Int
+  produtoId      Int
+  quantidade     Int
+  precoUnitario  Float
+
+  venda   VendaAvulsa @relation(fields: [vendaAvulsaId], references: [id])
+  produto Produto     @relation(fields: [produtoId], references: [id])
+}
+
+model FechamentoCaixa {
+  id                 Int           @id @default(autoincrement())
+  aberturaId         Int           @unique
+  abertura           AberturaCaixa @relation(fields: [aberturaId], references: [id])
+  responsavel        String
+  horario            String
+  vendasSistema      Float // O que o sistema registrou (Soma de todas as mesas fechadas no período)
+  diferencaCaixa     Float         @default(0) // valorFinal - SaldoEsperado
+  valorFinal         Float // Dinheiro físico no caixa
+  custosOperacionais Json // { carvao: 20, gas: 10, outros: 5 }
+  estoqueFinal       Json // Snapshot do estoque no momento do fechamento
+  lucroCalculado     Float
+  totalPendente      Float @default(0)
+  mesasPendente      Json @default("[]")
+  createdAt          DateTime      @default(now())
 }
 
 model Mesa {
-  id         Int       @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   nome       String
   observacao String?
-  status     String    @default("aberta")
+  status     String        @default("aberta")
   produtos   MesaProduto[]
-  total      Float     @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  total      Float         @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }
 
 model Produto {
-  id        Int     @id @default(autoincrement())
-  nome      String
-  descricao String?
-  custo     Float
-  preco     Float
-  categoria String
-  estoque   Int @default(0)
-  estoqueMinimo   Int @default(0)
-  mesas     MesaProduto[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int           @id @default(autoincrement())
+  nome          String
+  descricao     String?
+  custo         Float
+  preco         Float
+  categoria     String
+  estoque       Int           @default(0)
+  estoqueMinimo Int           @default(0)
+  mesas         MesaProduto[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model MesaProduto {
-  id         Int     @id @default(autoincrement())
-  quantidade Int     @default(1)
-  mesa       Mesa    @relation(fields: [mesaId], references: [id])
-  mesaId     Int
-  produto    Produto @relation(fields: [produtoId], references: [id])
-  produtoId  Int
-  precoUnitario Float     @default(0)
-  subtotal Float     @default(0)
+  id            Int     @id @default(autoincrement())
+  quantidade    Int     @default(1)
+  mesa          Mesa    @relation(fields: [mesaId], references: [id])
+  mesaId        Int
+  produto       Produto @relation(fields: [produtoId], references: [id])
+  produtoId     Int
+  precoUnitario Float   @default(0)
+  subtotal      Float   @default(0)
 }

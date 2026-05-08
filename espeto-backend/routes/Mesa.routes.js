@@ -64,6 +64,43 @@ router.patch('/:id/fechar', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.mesa.delete({ where: { id: Number(req.params.id) } });
+    res.json({ sucesso: true });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+
+router.patch('/:id/abrir', async (req, res) => {
+  try {
+    const mesaId = Number(req.params.id);
+
+    // 1. Removemos todos os produtos vinculados a esta mesa
+    // Certifique-se de que o nome do modelo no seu schema é 'mesaProduto'
+    await prisma.mesaProduto.deleteMany({
+      where: {
+        mesaId: mesaId
+      }
+    });
+
+    // 2. Agora que a mesa está limpa, alteramos o status para 'aberta'
+    const mesa = await prisma.mesa.update({
+      where: { id: mesaId },
+      data: { status: 'aberta', total: 0 },
+      // Opcional: incluir os produtos para confirmar que a lista vem vazia []
+      include: { produtos: true }
+    });
+
+    res.json(mesa);
+  } catch (err) {
+    console.error("Erro ao reabrir mesa:", err.message);
+    res.status(500).json({ erro: "Não foi possível reabrir a mesa e limpar os itens." });
+  }
+});
+
 // POST /mesas/:id/produtos
 router.post('/:id/produtos', async (req, res) => {
   try {
@@ -150,6 +187,32 @@ router.delete('/:mesaId/mesaprodutos/:mesaProdutoId', async (req, res) => {
 
     res.json({ sucesso: true });
   } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+
+router.patch('/pendente', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    console.log(">>> IDs recebidos no servidor:", ids); // ISSO AQUI É VITAL
+
+    if (!ids || !Array.isArray(ids)) {
+      console.log(">>> Erro: IDs inválidos");
+      return res.status(400).json({ erro: "IDs não fornecidos ou formato inválido" });
+    }
+
+    const mesasAtualizadas = await prisma.mesa.updateMany({
+      where: {
+        id: { in: ids.map(id => Number(id)) }
+      },
+      data: { status: 'pendente' }
+    });
+
+    console.log(">>> Mesas afetadas no banco:", mesasAtualizadas.count);
+    res.json({ mensagem: "Sucesso", quantidade: mesasAtualizadas.count });
+  } catch (err) {
+    console.error(">>> Erro no Prisma:", err.message);
     res.status(500).json({ erro: err.message });
   }
 });
