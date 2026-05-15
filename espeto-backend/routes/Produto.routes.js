@@ -7,7 +7,9 @@ const prisma = new PrismaClient();
 // GET /produtos
 router.get('/', async (req, res) => {
   try {
-    const produtos = await prisma.produto.findMany();
+    const produtos = await prisma.produto.findMany({
+      where: { ativo: true }, // ← só exibe ativos
+    });
     res.json(produtos);
   } catch (err) {
     res.status(500).json({ erro: err.message });
@@ -72,7 +74,25 @@ router.put('/:id', async (req, res) => {
 // DELETE /produtos/:id
 router.delete('/:id', async (req, res) => {
   try {
-    await prisma.produto.delete({ where: { id: Number(req.params.id) } });
+    const id = Number(req.params.id);
+
+    // Verifica se o produto tem histórico de vendas
+    const [mesaProdutos, itensAvulsos] = await Promise.all([
+      prisma.mesaProduto.count({ where: { produtoId: id } }),
+      prisma.itemVendaAvulsa.count({ where: { produtoId: id } }),
+    ]);
+
+    if (mesaProdutos > 0 || itensAvulsos > 0) {
+      // Soft delete — apenas desativa o produto em vez de deletar
+      const produto = await prisma.produto.update({
+        where: { id },
+        data: { ativo: false },
+      });
+      return res.json({ sucesso: true, aviso: 'Produto desativado pois possui histórico de vendas.', produto });
+    }
+
+    // Sem histórico — pode deletar de verdade
+    await prisma.produto.delete({ where: { id } });
     res.json({ sucesso: true });
   } catch (err) {
     res.status(500).json({ erro: err.message });

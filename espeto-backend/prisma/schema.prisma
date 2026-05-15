@@ -80,6 +80,7 @@ model Produto {
   categoria      String
   estoque        Int               @default(0)
   estoqueMinimo  Int               @default(0)
+  ativo Boolean @default(true)
   
   // Relacionamentos existentes
   mesas          MesaProduto[]
