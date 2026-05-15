@@ -17,12 +17,17 @@ model AberturaCaixa {
   createdAt      DateTime @default(now())
 
   fechamento FechamentoCaixa?
+  vendas         VendaAvulsa[]     // Relacionamento inverso
+  mesas          Mesa[]            // Relacionamento inverso
 }
 
 model VendaAvulsa {
   id       Int              @id @default(autoincrement())
   dataHora DateTime         @default(now())
   itens    ItemVendaAvulsa[]
+
+  aberturaCaixaId  Int?
+  aberturaCaixa    AberturaCaixa?   @relation(fields: [aberturaCaixaId], references: [id])
 }
 
 model ItemVendaAvulsa {
@@ -62,20 +67,28 @@ model Mesa {
   total      Float         @default(0)
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+  aberturaCaixaId  Int?           // Para saber em qual turno essa mesa foi aberta
+  aberturaCaixa    AberturaCaixa? @relation(fields: [aberturaCaixaId], references: [id])
 }
 
 model Produto {
-  id            Int           @id @default(autoincrement())
-  nome          String
-  descricao     String?
-  custo         Float
-  preco         Float
-  categoria     String
-  estoque       Int           @default(0)
-  estoqueMinimo Int           @default(0)
-  mesas         MesaProduto[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id             Int               @id @default(autoincrement())
+  nome           String
+  descricao      String?
+  custo          Float
+  preco          Float
+  categoria      String
+  estoque        Int               @default(0)
+  estoqueMinimo  Int               @default(0)
+  
+  // Relacionamentos existentes
+  mesas          MesaProduto[]
+  
+  // ADICIONE ESTA LINHA ABAIXO:
+  itensVendaAvulsa ItemVendaAvulsa[] 
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model MesaProduto {
